@@ -34,7 +34,6 @@ public class TestController {
 			String backMessage = br.readLine();
 			return backMessage;
 		}  catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return test;
