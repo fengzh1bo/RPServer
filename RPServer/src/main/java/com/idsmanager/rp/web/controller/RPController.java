@@ -21,12 +21,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import com.idsmanager.rp.domain.AuthenticateRequestData;
+import com.idsmanager.rp.domain.AuthenticateResponseData;
 import com.idsmanager.rp.domain.RegisterRequestData;
+import com.idsmanager.rp.domain.RegisterResponseData;
 import com.idsmanager.rp.util.HttpClientUtils;
 import com.idsmanager.rp.util.bean.ProcessResult;
 
 @Controller("testController")
-public class TestController {
+public class RPController {
 	/**
 	 * 注册请求
 	 * thinkpad dushaofei
@@ -34,11 +36,11 @@ public class TestController {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	@RequestMapping(value="/v1/test/{test}")
+	@RequestMapping(value="/v1/RegisterRequest/{username}")
 	@ResponseBody
-	public ProcessResult<RegisterRequestData> test(@PathVariable String test){//注册请求
+	public ProcessResult<RegisterRequestData> test(@PathVariable String username){//注册请求
 		ProcessResult<RegisterRequestData> pr = new ProcessResult<RegisterRequestData>();
-		String url ="http://192.168.1.8:8080/FIDOServer/rp/RegisterRequest/"+"shaofei";
+		String url ="http://192.168.1.8:8080/FIDOServer/rp/RegisterRequest/"+username;
 		HttpGet get = new HttpGet(url);
 		try {   
 			JSONObject json = getJsonObject(get);
@@ -59,20 +61,18 @@ public class TestController {
 	 * @throws UnsupportedEncodingException
 	 */
 	@SuppressWarnings({ "unchecked", "static-access" })
-	@RequestMapping(value="/v1/test/response")
+	@RequestMapping(value="/v1/RegisterReponse")
 	@ResponseBody
-	public ProcessResult<Integer> RegistResponse(@RequestBody String clientData,String registData,HttpServletRequest address) throws UnsupportedEncodingException{
+	public ProcessResult<Integer> RegistResponse(@RequestBody RegisterResponseData responseData,HttpServletRequest address) throws UnsupportedEncodingException{
 		ProcessResult<Integer> pr = new ProcessResult<Integer>();
 		String url = "http://192.168.1.8:8080/FIDOServer/rp/RegisterResponse";
 		HttpUriRequest request = new HttpPost(url);
-		clientData = "eyJjaGFsbGVuZ2UiOiIwXzI1VjJXMFRyWkdfNy1ZS0tBZXNiOUZodTBRWWJHdUc3WUItZ1ZQa29FIiwib3JpZ2luIjoiaHR0cDovL21lLmlkc21hbmFnZXIuY29tL0ZJRE9TZXJ2ZXIiLCJ0eXAiOiJuYXZpZ2F0b3IuaWQuZmluaXNoRW5yb2xsbWVudCJ9";
-		registData = "BQTVcBof2jtG-Ajk-uQA9n4QYP59--mK09QGUkWJDyeDPfNTwbLaOtk2VVDB_bOWTNWQh-QEowyplZUYw-FH9vqbAAAAAAAAAAAAAAAAAAA\u003d";
 		JSONObject obj = new JSONObject();
-		obj.accumulate("clientData", clientData);
-		obj.accumulate("registrationData", registData);
+		obj.accumulate("clientData", responseData.getClientData());
+		obj.accumulate("registrationData", responseData.getRegistrationData());
 		StringEntity entity = new StringEntity(obj.toString(),HTTP.UTF_8);
 		((HttpPost)request).setEntity(entity);
-		try {
+		try { 
 			JSONObject jsonObj = getJsonObject(request);
 			pr = (ProcessResult<Integer>) jsonObj.toBean(jsonObj,pr.getClass());
 		} catch (ClientProtocolException e) { 
@@ -85,21 +85,19 @@ public class TestController {
 	/**
 	 * 验证请求
 	 * thinkpad dushaofei
-	 * @param reqJson
+	 * @param username
 	 * @return
 	 */
 	@SuppressWarnings({ "unchecked", "static-access" })
-	@RequestMapping(value="/v1/test/AuthRequest")
+	@RequestMapping(value="/v1/AuthenticateRequest")
 	@ResponseBody
-	public ProcessResult<AuthenticateRequestData>AuthRequest(@PathVariable String reqJson ){ 
+	public ProcessResult<AuthenticateRequestData>AuthRequest(@PathVariable String username ){ 
 		ProcessResult<AuthenticateRequestData> pr = new ProcessResult<AuthenticateRequestData>();
-		String url = "http://192.168.1.8:8080/FIDOServer/rp/AuthenticateRequest/"+"yalin";
+		String url = "http://192.168.1.8:8080/FIDOServer/rp/AuthenticateRequest/"+username;
 		HttpGet get = new HttpGet(url);
 		try {
 			JSONObject jsonObj = getJsonObject(get);
 			pr = (ProcessResult<AuthenticateRequestData>) jsonObj.toBean(jsonObj, pr.getClass());
-			
-			System.out.println(pr.getDetail());
 		} catch (ClientProtocolException e) {
 			
 			e.printStackTrace();
@@ -118,15 +116,15 @@ public class TestController {
 	 * @return
 	 */
 	@SuppressWarnings({ "unchecked", "static-access" })
-	@RequestMapping(value="/v1/test/AuthResponse")
-	public ProcessResult<Integer>AuthResponse(@RequestBody String clientData,@RequestBody String signatureData,String keyHandle){
+	@RequestMapping(value="/v1/test/AuthenticateResponse")
+	public ProcessResult<Integer>AuthResponse(@RequestBody AuthenticateResponseData responseData){
 		ProcessResult<Integer> pr = new ProcessResult<Integer>();
 		String url = "http://192.168.1.8:8080/FIDOServer/rp/AuthenticateResponse";
 		HttpUriRequest post = new HttpPost(url);
 		JSONObject jsonP = new JSONObject();
-		jsonP.accumulate("clientData", clientData);
-		jsonP.accumulate("signatureData", signatureData);
-		jsonP.accumulate("keyHandle", keyHandle);
+		jsonP.accumulate("clientData", responseData.getClientData());
+		jsonP.accumulate("signatureData", responseData.getSignatureData());
+		jsonP.accumulate("keyHandle", responseData.getKeyHandle());
 		StringEntity entity;
 		try {
 			entity = new StringEntity(jsonP.toString(),HTTP.UTF_8);
